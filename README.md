@@ -26,6 +26,7 @@ input_videos/             放入 .mp4 / .mov / .avi
 frames/<视频名>/           输出 frame_%04d.jpg
 output/<视频名>_analysis.json
 output/<视频名>_prompt.txt
+output_prompts/<视频名>/prompt_01.txt ... prompt_10.txt
 ```
 
 ## 使用
@@ -46,6 +47,18 @@ python main.py --video .\input_videos\demo.mp4
 
 ```powershell
 python main.py --subject "中心人物" --action "自然站立" --quality "4K，电影感，细节清晰，自然光影" --constraints "避免闪烁与变形"
+```
+
+指定单个视频时，会额外生成 10 个 Seedance 2.0 运镜提示词变体：
+
+```powershell
+python main.py --video .\input_videos\demo.mp4
+```
+
+输出位置：
+
+```text
+output_prompts/<视频名>/prompt_01.txt ... prompt_10.txt
 ```
 
 ## 提示词格式

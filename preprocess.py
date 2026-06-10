@@ -48,8 +48,11 @@ def get_video_metadata(video_path):
     }
 
 
-def extract_frames(video_path):
-    # type: (Path) -> List[Path]
+def extract_frames(video_path, sample_rate=None):
+    # type: (Path, Optional[int]) -> List[Any]
+    if sample_rate is not None:
+        return _extract_frames_cv2(video_path, sample_rate)
+
     require_binary(config.FFMPEG_BIN)
     config.ensure_directories()
 
@@ -75,6 +78,31 @@ def extract_frames(video_path):
     subprocess.run(cmd, check=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
     return sorted(video_frame_dir.glob("*.jpg"))
+
+
+def _extract_frames_cv2(video_path, sample_rate):
+    # type: (Path, int) -> List[Any]
+    try:
+        import cv2
+    except ImportError as exc:
+        raise RuntimeError("未找到 Python 依赖：opencv-python。请先运行 pip install -r requirements.txt。") from exc
+
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        raise ValueError("无法打开视频：{}".format(video_path))
+
+    frames = []
+    count = 0
+    interval = max(1, int(sample_rate))
+    while len(frames) < config.MAX_FRAMES:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        if count % interval == 0:
+            frames.append(frame)
+        count += 1
+    cap.release()
+    return frames
 
 
 def find_input_videos():

@@ -81,6 +81,58 @@ def direction_from_flow(dx, dy):
     return horizontal_trend, vertical_trend
 
 
+def extract_camera_params(frames):
+    # type: (List[Any]) -> Dict[str, Any]
+    if len(frames) < 2:
+        return {"type": "static", "direction": None, "speed": 5.0, "shot_scale": "medium"}
+
+    cv2, np = _load_cv_dependencies()
+    dx_values = []  # type: List[float]
+    dy_values = []  # type: List[float]
+    speed_values = []  # type: List[float]
+
+    previous = _frame_to_gray(frames[0], cv2, np)
+    for frame in frames[1:]:
+        current = _frame_to_gray(frame, cv2, np)
+        flow = cv2.calcOpticalFlowFarneback(
+            previous,
+            current,
+            None,
+            pyr_scale=0.5,
+            levels=3,
+            winsize=15,
+            iterations=3,
+            poly_n=5,
+            poly_sigma=1.2,
+            flags=0,
+        )
+        dx_values.append(float(np.mean(flow[..., 0])))
+        dy_values.append(float(np.mean(flow[..., 1])))
+        speed_values.append(float(np.mean(np.sqrt(flow[..., 0] ** 2 + flow[..., 1] ** 2))))
+        previous = current
+
+    dx = float(mean(dx_values)) if dx_values else 0.0
+    dy = float(mean(dy_values)) if dy_values else 0.0
+    speed = min(10.0, max(0.0, (float(mean(speed_values)) if speed_values else 5.0)))
+
+    if abs(dx) >= abs(dy) and abs(dx) >= config.DIRECTION_EPSILON:
+        motion_type = "horizontal_pan"
+        direction = "left_to_right" if dx > 0 else "right_to_left"
+    elif abs(dy) >= config.DIRECTION_EPSILON:
+        motion_type = "vertical_tilt"
+        direction = "top_to_bottom" if dy > 0 else "bottom_to_top"
+    else:
+        motion_type = "static"
+        direction = None
+
+    return {
+        "type": motion_type,
+        "direction": direction,
+        "speed": round(speed, 2),
+        "shot_scale": "medium",
+    }
+
+
 def _load_cv_dependencies():
     # type: () -> Tuple[Any, Any]
     try:
@@ -100,6 +152,14 @@ def _load_gray(frame_path, cv2, np=None):
     if image is None:
         raise ValueError("无法读取帧文件：{}".format(frame_path))
     resized = cv2.resize(image, config.ANALYSIS_SIZE)
+    return cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+
+
+def _frame_to_gray(frame, cv2, np):
+    # type: (Any, Any, Any) -> Any
+    if isinstance(frame, Path):
+        return _load_gray(frame, cv2, np)
+    resized = cv2.resize(frame, config.ANALYSIS_SIZE)
     return cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
 
 

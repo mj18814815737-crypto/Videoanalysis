@@ -8,6 +8,8 @@ frames/*
 !frames/.gitkeep
 output/*
 !output/.gitkeep
+output_prompts/*
+!output_prompts/.gitkeep
 
 # Python caches and local environments
 __pycache__/

@@ -5,6 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent
 INPUT_DIR = BASE_DIR / "input_videos"
 FRAMES_DIR = BASE_DIR / "frames"
 OUTPUT_DIR = BASE_DIR / "output"
+PROMPT_OUTPUT_DIR = BASE_DIR / "output_prompts"
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi"}
 
@@ -36,6 +37,10 @@ DEFAULT_PROMPT_CONTEXT = {
     "constraints": "不写复杂多人互动，不写剧烈跑跳，避免闪烁与变形",
 }
 
+SPEED_LEVELS = ["中速", "较快", "快"]
+ACTION_SPEED_VARIANTS = ["较快", "快速"]
+DEFAULT_ACTION = "人物缓慢转身"
+
 CAMERA_PROMPT_MAP = {
     "static": "固定镜头，中景锁定主体，画面丝滑流畅，无抖动",
     "slow_pan_tilt": "缓慢横摇/竖摇，方向 {direction_cn}，画面丝滑流畅，无抖动",
@@ -50,3 +55,4 @@ def ensure_directories():
     INPUT_DIR.mkdir(exist_ok=True)
     FRAMES_DIR.mkdir(exist_ok=True)
     OUTPUT_DIR.mkdir(exist_ok=True)
+    PROMPT_OUTPUT_DIR.mkdir(exist_ok=True)
