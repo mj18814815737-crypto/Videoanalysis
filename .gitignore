@@ -1,0 +1,28 @@
+# Local runtime and downloaded tools
+tools/
+
+# User videos and generated artifacts
+input_videos/*
+!input_videos/.gitkeep
+frames/*
+!frames/.gitkeep
+output/*
+!output/.gitkeep
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.zip
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
