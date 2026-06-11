@@ -5,7 +5,6 @@ BASE_DIR = Path(__file__).resolve().parent
 INPUT_DIR = BASE_DIR / "input_videos"
 FRAMES_DIR = BASE_DIR / "frames"
 OUTPUT_DIR = BASE_DIR / "output"
-PROMPT_OUTPUT_DIR = BASE_DIR / "output_prompts"
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi"}
 
@@ -55,4 +54,3 @@ def ensure_directories():
     INPUT_DIR.mkdir(exist_ok=True)
     FRAMES_DIR.mkdir(exist_ok=True)
     OUTPUT_DIR.mkdir(exist_ok=True)
-    PROMPT_OUTPUT_DIR.mkdir(exist_ok=True)

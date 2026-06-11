@@ -1,6 +1,5 @@
 import argparse
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -17,6 +16,22 @@ from preprocess import (
 )
 from prompt_builder import build_seedance_prompt
 from prompt_gen import PromptGen
+
+
+def build_prompt_variants(video_path, target=10):
+    from camera_motion import extract_camera_params
+    from config import DEFAULT_ACTION
+
+    frames = extract_frames(video_path, sample_rate=5)
+    cam_params = extract_camera_params(frames)
+    prompts = PromptGen(cam_params, DEFAULT_ACTION).generate(target)
+
+    lines = ["", "=== Prompt Variants ==="]
+    for index, variant in enumerate(prompts, 1):
+        lines.append("=== Prompt {:02d} ===".format(index))
+        lines.append(variant)
+        lines.append("")
+    return "\n".join(lines), len(prompts)
 
 
 def process_video(video_path, args):
@@ -41,6 +56,8 @@ def process_video(video_path, args):
         quality=args.quality,
         constraints=args.constraints,
     )
+    variants_text, variant_count = build_prompt_variants(video_path, 10)
+    prompt = "{}\n{}".format(prompt, variants_text)
 
     report = {
         "video": video_path.name,
@@ -62,29 +79,13 @@ def process_video(video_path, args):
 
     print("JSON 输出：{}".format(analysis_path))
     print("提示词输出：{}".format(prompt_path))
+    print("已整合 {} 个提示词变体到：{}".format(variant_count, prompt_path))
     return {
         "video": video_path.name,
         "analysis_path": str(analysis_path),
         "prompt_path": str(prompt_path),
         "camera_type": motion["type"],
     }
-
-
-def save_prompt_variants(video_path, target=10):
-    from camera_motion import extract_camera_params
-    from config import DEFAULT_ACTION, PROMPT_OUTPUT_DIR
-
-    frames = extract_frames(video_path, sample_rate=5)
-    cam_params = extract_camera_params(frames)
-    prompts = PromptGen(cam_params, DEFAULT_ACTION).generate(target)
-    out_dir = os.path.join(str(PROMPT_OUTPUT_DIR), video_path.stem)
-    os.makedirs(out_dir, exist_ok=True)
-    for index, prompt in enumerate(prompts, 1):
-        out_path = os.path.join(out_dir, "prompt_{:02d}.txt".format(index))
-        with open(out_path, "w", encoding="utf-8") as handle:
-            handle.write(prompt)
-    print("Saved {} prompts to {}".format(len(prompts), out_dir))
-    return out_dir
 
 
 def collect_videos(args):
@@ -122,8 +123,6 @@ def main():
         for video_path in videos:
             resolved = video_path.resolve()
             results.append(process_video(resolved, args))
-            if args.video:
-                save_prompt_variants(resolved, 10)
 
         print("处理完成，共处理 {} 个视频。".format(len(results)))
         return 0
